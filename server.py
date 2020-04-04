@@ -7,7 +7,7 @@ from flask_redis import FlaskRedis
 app = Flask(__name__)
 redis = FlaskRedis(app)
 
-scores_url = "http://live-test-scores.herokuapp.com/scores"
+SCORES_URL = "http://live-test-scores.herokuapp.com/scores"
 
 
 def connect():
@@ -28,7 +28,7 @@ def connect():
     #  exams: [id, id]
     #  students: [id, id] 
 
-    messages = SSEClient(scores_url)
+    messages = SSEClient(SCORES_URL)
     if not redis.get('students'):
         redis.set('students', json.dumps([]))
     if not redis.get('exams'):
@@ -43,8 +43,7 @@ def connect():
             if not redis.get(student_id):
                 data = {'type': 'student', 
                         'scores': [{'id': exam_id, 'score': score}], 
-                        'average': score,
-                        'total': score}
+                        'average': score}
                 redis.set(student_id, json.dumps(data))
                 all_students = json.loads(redis.get('students'))
                 all_students.append(student_id)
@@ -52,8 +51,7 @@ def connect():
             if not redis.get(exam_id):
                 data = {'type': 'exam',
                         'scores': [{'id': student_id, 'score': score}], 
-                        'average': score,
-                        'total': score}
+                        'average': score}
                 redis.set(exam_id, json.dumps(data))
                 all_exams = json.loads(redis.get('exams'))
                 all_exams.append(exam_id)
@@ -61,15 +59,13 @@ def connect():
 
             # Update exam obj 
             exam = json.loads(redis.get(exam_id))
-            exam['total'] += score
-            exam['average'] = exam['total'] / len(exam['scores'])
+            exam['average'] = (exam['total'] * len(exam['scores']) + score) / len(exam['scores'] + 1)
             exam['scores'].append({'id': student_id, 'score': score})
             redis.set(exam_id, json.dumps(exam))
 
             # Update student obj
             student = json.loads(redis.get(student_id))
-            student['total'] += score
-            student['average'] = student['total'] / len(student['scores'])
+            student['average'] = (student['total'] * len(student['scores']) + score) / len(student['scores'] + 1)
             student['scores'].append({'id': exam_id, 'score': score})
             redis.set(student_id, json.dumps(student))
     
