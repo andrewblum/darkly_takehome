@@ -21,8 +21,6 @@ def connect():
     #               [{id: 'mary8', score: 1}], 
     #           average: 
     #               1
-    #           total:
-    #               1
     #         } 
     #     
     #  exams: [id, id]
